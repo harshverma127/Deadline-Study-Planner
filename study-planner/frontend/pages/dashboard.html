@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Study Planner</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      transition: transform 0.15s ease;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .stat-card .stat-icon { font-size: 1.75rem; margin-bottom: 0.4rem; }
+    .stat-card .stat-number {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--lavender-dark);
+      line-height: 1;
+    }
+    .stat-card .stat-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-top: 0.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Task List ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .section-header h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .task-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--lavender-dark);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+    .task-card:hover { transform: translateX(3px); box-shadow: var(--shadow-md); }
+    .task-card.priority-1 { border-left-color: #f87171; }
+    .task-card.priority-2 { border-left-color: #fbbf24; }
+    .task-card.priority-3 { border-left-color: #34d399; }
+    .task-card.done { opacity: 0.55; border-left-color: #d1d5db; }
+
+    .task-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 0.35rem;
+    }
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--text-mid);
+    }
+    .task-meta .dot { color: var(--text-light); }
+
+    .task-actions { display: flex; gap: 0.4rem; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: white;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-mid);
+      transition: all 0.15s ease;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--lavender);
+      border-color: var(--lavender-dark);
+      color: var(--lavender-dark);
+    }
+
+    /* Subjects panel */
+    .subjects-panel {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 1.75rem;
+    }
+    .subjects-panel h3 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text-mid);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .subject-add-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .subject-add-row input { flex: 1; }
+    .subject-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .subject-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.7rem;
+      background: var(--lavender);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--lavender-dark);
+    }
+    .subject-chip button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: var(--lavender-dark);
+      opacity: 0.7;
+      padding: 0;
+      line-height: 1;
+    }
+    .subject-chip button:hover { opacity: 1; }
+
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <script src="/js/app.js"></script>
+  <script>
+    requireAuth();
+    setupNavbar();
+  </script>
+
+  <div class="page-container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <p id="greeting">Good morning! Here's your study overview.</p>
+    </div>
+
+    <!-- Alert -->
+    <div id="alert" class="alert"></div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card" style="background: linear-gradient(135deg,#ede9fe,#dbeafe)">
+        <div class="stat-icon">📋</div>
+        <div class="stat-number" id="stat-total">—</div>
+        <div class="stat-label">Total Tasks</div>
+      </div>
+      <div class="stat-card" style="background: linear-gradient(135deg,#fce7f3,#fecaca)">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-number" id="stat-urgent">—</div>
+        <div class="stat-label">Due in 3 Days</div>
+      </div>
+      <div class="stat-card" style="background: linear-gradient(135deg,#d1fae5,#a7f3d0)">
+        <div class="stat-icon">✅</div>
+        <div class="stat-number" id="stat-done">—</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card" style="background: linear-gradient(135deg,#fefce8,#fde68a)">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-number" id="stat-pending">—</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+
+    <!-- Subjects Manager -->
+    <div class="subjects-panel">
+      <h3>📚 My Subjects</h3>
+      <div class="subject-add-row">
+        <input type="text" id="subject-input" placeholder="Add a subject (e.g. Mathematics)…" />
+        <button class="btn btn-primary btn-sm" onclick="addSubject()">Add</button>
+      </div>
+      <div class="subject-chips" id="subjects-list">
+        <span style="color:var(--text-light);font-size:0.8rem">Loading…</span>
+      </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="section-header">
+      <h2>📝 My Tasks</h2>
+      <a href="/add-task" class="btn btn-primary btn-sm">+ New Task</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('done', this)">Completed</button>
+      <button class="filter-btn" onclick="setFilter('1', this)">🔴 High Priority</button>
+      <button class="filter-btn" onclick="setFilter('2', this)">🟡 Medium</button>
+      <button class="filter-btn" onclick="setFilter('3', this)">🟢 Low</button>
+    </div>
+
+    <!-- Tasks Container -->
+    <div id="tasks-container">
+      <div class="spinner"></div>
+    </div>
+
+  </div>
+
+  <script>
+    let allTasks = [];
+    let currentFilter = 'all';
+
+    // Set greeting based on time of day
+    function setGreeting() {
+      const hour = new Date().getHours();
+      const user = api.getUser();
+      let greeting = 'Good evening';
+      if (hour < 12) greeting = 'Good morning';
+      else if (hour < 17) greeting = 'Good afternoon';
+      document.getElementById('greeting').textContent =
+        `${greeting}, ${user?.name}! Here's your study overview.`;
+    }
+
+    // Load all subjects for this user
+    async function loadSubjects() {
+      try {
+        const subjects = await api.get('/subjects');
+        renderSubjects(subjects);
+      } catch (err) {
+        console.error('Failed to load subjects:', err);
+      }
+    }
+
+    // Render subject chips
+    function renderSubjects(subjects) {
+      const container = document.getElementById('subjects-list');
+      if (subjects.length === 0) {
+        container.innerHTML = '<span style="color:var(--text-light);font-size:0.8rem">No subjects yet. Add one above.</span>';
+        return;
+      }
+      container.innerHTML = subjects.map(s => `
+        <div class="subject-chip">
+          📖 ${s.subject_name}
+          <button onclick="deleteSubject(${s.subject_id})" title="Remove">×</button>
+        </div>
+      `).join('');
+    }
+
+    // Add a new subject
+    async function addSubject() {
+      const input = document.getElementById('subject-input');
+      const name = input.value.trim();
+      if (!name) return showAlert('alert', 'Please enter a subject name');
+
+      try {
+        await api.post('/subjects', { subject_name: name });
+        input.value = '';
+        loadSubjects();
+        showAlert('alert', `Subject "${name}" added!`, 'success');
+      } catch (err) {
+        showAlert('alert', err.message);
+      }
+    }
+
+    // Delete a subject
+    async function deleteSubject(id) {
+      if (!confirm('Delete this subject? Tasks using it will also be deleted.')) return;
+      try {
+        await api.delete(`/subjects/${id}`);
+        loadSubjects();
+        loadTasks(); // Refresh tasks too
+      } catch (err) {
+        showAlert('alert', err.message);
+      }
+    }
+
+    // Load all tasks
+    async function loadTasks() {
+      try {
+        allTasks = await api.get('/tasks');
+        updateStats(allTasks);
+        renderTasks(allTasks, currentFilter);
+      } catch (err) {
+        document.getElementById('tasks-container').innerHTML =
+          '<p style="color:var(--text-light)">Failed to load tasks.</p>';
+      }
+    }
+
+    // Update stats cards
+    function updateStats(tasks) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const threeDays = new Date(today); threeDays.setDate(today.getDate() + 3);
+
+      document.getElementById('stat-total').textContent   = tasks.length;
+      document.getElementById('stat-done').textContent    = tasks.filter(t => t.status === 'done').length;
+      document.getElementById('stat-pending').textContent = tasks.filter(t => t.status === 'pending').length;
+      document.getElementById('stat-urgent').textContent  = tasks.filter(t => {
+        const d = new Date(t.deadline);
+        return t.status === 'pending' && d <= threeDays;
+      }).length;
+    }
+
+    // Filter button click
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTasks(allTasks, filter);
+    }
+
+    // Render tasks filtered list
+    function renderTasks(tasks, filter) {
+      const container = document.getElementById('tasks-container');
+
+      let filtered = tasks;
+      if (filter === 'pending') filtered = tasks.filter(t => t.status === 'pending');
+      else if (filter === 'done') filtered = tasks.filter(t => t.status === 'done');
+      else if (['1','2','3'].includes(filter)) filtered = tasks.filter(t => t.priority == filter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="emoji">📭</div>
+            <h3>No tasks found</h3>
+            <p>${filter === 'all' ? 'Add your first task to get started!' : 'No tasks match this filter.'}</p>
+            ${filter === 'all' ? '<a href="/add-task" class="btn btn-primary" style="margin-top:1rem">+ Add Task</a>' : ''}
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(task => `
+        <div class="task-card priority-${task.priority} ${task.status === 'done' ? 'done' : ''}">
+          <div>
+            <div class="task-title">${task.title}</div>
+            <div class="task-meta">
+              <span class="badge badge-subject">📖 ${task.subject_name}</span>
+              ${priorityBadge(task.priority)}
+              <span class="dot">•</span>
+              <span>📅 ${formatDate(task.deadline)}</span>
+              <span class="dot">•</span>
+              <span>${daysUntil(task.deadline)}</span>
+              <span class="dot">•</span>
+              <span>⏱ ${task.estimated_time}h</span>
+            </div>
+          </div>
+          <div class="task-actions">
+            ${task.status === 'pending'
+              ? `<button class="btn btn-success btn-sm" onclick="markDone(${task.task_id})">✓ Done</button>`
+              : `<button class="btn btn-sm" style="background:#e5e7eb;color:#6b7280" onclick="markPending(${task.task_id})">↩ Undo</button>`
+            }
+            <button class="btn btn-danger btn-sm" onclick="deleteTask(${task.task_id})">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Mark task as done
+    async function markDone(id) {
+      try {
+        await api.put(`/tasks/${id}`, { status: 'done' });
+        loadTasks();
+      } catch (err) { showAlert('alert', err.message); }
+    }
+
+    // Mark task as pending (undo)
+    async function markPending(id) {
+      try {
+        await api.put(`/tasks/${id}`, { status: 'pending' });
+        loadTasks();
+      } catch (err) { showAlert('alert', err.message); }
+    }
+
+    // Delete a task
+    async function deleteTask(id) {
+      if (!confirm('Delete this task?')) return;
+      try {
+        await api.delete(`/tasks/${id}`);
+        loadTasks();
+        showAlert('alert', 'Task deleted.', 'success');
+      } catch (err) { showAlert('alert', err.message); }
+    }
+
+    // Allow Enter to add subject
+    document.getElementById('subject-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') addSubject();
+    });
+
+    // Init
+    setGreeting();
+    loadSubjects();
+    loadTasks();
+  </script>
+</body>
+</html>

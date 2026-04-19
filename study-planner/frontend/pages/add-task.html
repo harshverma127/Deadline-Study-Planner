@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Task — Study Planner</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .add-task-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* Priority selector */
+    .priority-options {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .priority-option {
+      flex: 1;
+      position: relative;
+    }
+    .priority-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+    }
+    .priority-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.75rem 0.5rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-mid);
+      background: white;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .priority-option label .p-icon { font-size: 1.4rem; }
+    .priority-option input:checked + label {
+      border-width: 2.5px;
+    }
+    .priority-option.high  input:checked + label { border-color: #f87171; background: #fff1f2; color: #dc2626; }
+    .priority-option.medium input:checked + label { border-color: #fbbf24; background: #fffbeb; color: #92400e; }
+    .priority-option.low   input:checked + label { border-color: #34d399; background: #ecfdf5; color: #065f46; }
+    .priority-option label:hover { border-color: var(--lavender-dark); background: var(--lavender); }
+
+    /* Time slider */
+    .time-display {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--lavender-dark);
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--lavender-dark);
+    }
+
+    /* Tips panel */
+    .tips-panel {
+      position: sticky;
+      top: calc(var(--nav-height) + 1rem);
+    }
+    .tip-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tip-item:last-child { border-bottom: none; }
+    .tip-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .tip-text { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; }
+    .tip-text strong { color: var(--text-dark); }
+
+    .form-card { padding: 2rem; }
+
+    @media (max-width: 768px) {
+      .add-task-layout { grid-template-columns: 1fr; }
+      .tips-panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <script src="/js/app.js"></script>
+  <script>
+    requireAuth();
+    setupNavbar();
+  </script>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h1>Add New Task</h1>
+      <p>Fill in the details and the planner will schedule it automatically.</p>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <div class="add-task-layout">
+      <!-- Main Form -->
+      <div class="card form-card">
+
+        <div class="form-group">
+          <label>Task Title *</label>
+          <input type="text" id="title" placeholder="e.g. Complete Chapter 5 exercises" maxlength="100" />
+        </div>
+
+        <div class="form-group">
+          <label>Subject *</label>
+          <select id="subject_id">
+            <option value="">— Select a subject —</option>
+          </select>
+          <small style="color:var(--text-light);font-size:0.78rem;margin-top:0.3rem;display:block">
+            Add subjects from the <a href="/dashboard" style="color:var(--lavender-dark)">Dashboard</a> first.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Deadline *</label>
+          <input type="date" id="deadline" />
+        </div>
+
+        <div class="form-group">
+          <label>Priority *</label>
+          <div class="priority-options">
+            <div class="priority-option high">
+              <input type="radio" name="priority" id="p1" value="1" />
+              <label for="p1">
+                <span class="p-icon">🔴</span>
+                High
+              </label>
+            </div>
+            <div class="priority-option medium">
+              <input type="radio" name="priority" id="p2" value="2" checked />
+              <label for="p2">
+                <span class="p-icon">🟡</span>
+                Medium
+              </label>
+            </div>
+            <div class="priority-option low">
+              <input type="radio" name="priority" id="p3" value="3" />
+              <label for="p3">
+                <span class="p-icon">🟢</span>
+                Low
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Estimated Study Time</label>
+          <div class="time-display">
+            <span id="time-value">1</span> hour<span id="time-plural"></span>
+          </div>
+          <input
+            type="range"
+            id="estimated_time"
+            min="0.5" max="8" step="0.5"
+            value="1"
+            oninput="updateTimeDisplay(this.value)"
+          />
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-light);margin-top:0.25rem">
+            <span>30 min</span>
+            <span>8 hours</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="display:flex;gap:0.75rem">
+          <button class="btn btn-primary" onclick="submitTask()" style="flex:1;padding:0.75rem">
+            ✨ Add Task
+          </button>
+          <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+        </div>
+
+      </div>
+
+      <!-- Tips Panel -->
+      <div class="tips-panel">
+        <div class="card">
+          <h3 style="font-size:0.9rem;font-weight:800;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">
+            💡 Scheduling Tips
+          </h3>
+          <div class="tip-item">
+            <span class="tip-icon">📅</span>
+            <div class="tip-text"><strong>Deadline matters most.</strong> Tasks with the nearest deadline get scheduled first.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">🔢</span>
+            <div class="tip-text"><strong>Max 4 tasks/day.</strong> The planner avoids overloading you — tasks spread across days.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">⏱</span>
+            <div class="tip-text"><strong>Estimated time</strong> helps the planner allocate the right number of time slots for your task.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">🔴</span>
+            <div class="tip-text"><strong>Priority breaks ties.</strong> When two tasks share a deadline, High priority wins.</div>
+          </div>
+          <div class="tip-item">
+            <span class="tip-icon">🔄</span>
+            <div class="tip-text">After adding tasks, go to <strong>Schedule</strong> and click <em>Generate Schedule</em>.</div>
+          </div>
+        </div>
+
+        <!-- Quick subject adder -->
+        <div class="card" style="margin-top:1rem">
+          <h3 style="font-size:0.9rem;font-weight:800;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">
+            ➕ Quick Add Subject
+          </h3>
+          <div style="display:flex;gap:0.5rem">
+            <input type="text" id="quick-subject" placeholder="Subject name…" style="flex:1;padding:0.55rem 0.75rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;outline:none" />
+            <button class="btn btn-secondary btn-sm" onclick="quickAddSubject()">Add</button>
+          </div>
+          <div id="quick-subject-msg" style="font-size:0.78rem;margin-top:0.5rem;color:var(--text-light)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set minimum date to today (no past deadlines)
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('deadline').min = todayStr;
+    document.getElementById('deadline').value = todayStr;
+
+    // Update time display as slider moves
+    function updateTimeDisplay(val) {
+      const v = parseFloat(val);
+      document.getElementById('time-value').textContent = v % 1 === 0 ? v : v.toFixed(1);
+      document.getElementById('time-plural').textContent = v === 1 ? '' : 's';
+    }
+
+    // Load subjects into select dropdown
+    async function loadSubjects() {
+      try {
+        const subjects = await api.get('/subjects');
+        const select = document.getElementById('subject_id');
+        select.innerHTML = '<option value="">— Select a subject —</option>';
+
+        if (subjects.length === 0) {
+          select.innerHTML += '<option disabled>No subjects yet — add one on the right!</option>';
+          return;
+        }
+
+        subjects.forEach(s => {
+          select.innerHTML += `<option value="${s.subject_id}">${s.subject_name}</option>`;
+        });
+      } catch (err) {
+        console.error('Failed to load subjects');
+      }
+    }
+
+    // Quick add subject from sidebar
+    async function quickAddSubject() {
+      const input = document.getElementById('quick-subject');
+      const msg   = document.getElementById('quick-subject-msg');
+      const name  = input.value.trim();
+
+      if (!name) return;
+      try {
+        await api.post('/subjects', { subject_name: name });
+        input.value = '';
+        msg.textContent = `✓ "${name}" added!`;
+        msg.style.color = '#059669';
+        setTimeout(() => msg.textContent = '', 2000);
+        loadSubjects();
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.style.color = '#dc2626';
+      }
+    }
+
+    // Submit new task (Input Module)
+    async function submitTask() {
+      const title          = document.getElementById('title').value.trim();
+      const subject_id     = document.getElementById('subject_id').value;
+      const deadline       = document.getElementById('deadline').value;
+      const priority       = document.querySelector('input[name="priority"]:checked')?.value || '2';
+      const estimated_time = document.getElementById('estimated_time').value;
+
+      // Client-side validation
+      if (!title)      return showAlert('alert', 'Task title is required');
+      if (!subject_id) return showAlert('alert', 'Please select a subject');
+      if (!deadline)   return showAlert('alert', 'Deadline is required');
+
+      try {
+        await api.post('/tasks', {
+          title, subject_id: parseInt(subject_id), deadline, priority: parseInt(priority),
+          estimated_time: parseFloat(estimated_time)
+        });
+
+        showAlert('alert', '✅ Task added successfully! Redirecting...', 'success');
+        setTimeout(() => window.location.href = '/dashboard', 1200);
+      } catch (err) {
+        showAlert('alert', err.message);
+      }
+    }
+
+    // Enter key shortcut
+    document.getElementById('quick-subject').addEventListener('keydown', e => {
+      if (e.key === 'Enter') quickAddSubject();
+    });
+
+    loadSubjects();
+  </script>
+</body>
+</html>

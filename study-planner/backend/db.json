@@ -1,0 +1,111 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "name": "Harsh Verma",
+      "email": "harsh10a10207.sja@gmail.com",
+      "password": "$2a$10$2bTEY2Dqk6j5kZr7WryNQOZttDAam8kmJRXBJfCydLOFdAwYtrEei",
+      "created_at": "2026-04-19T20:46:28.447Z"
+    }
+  ],
+  "subjects": [
+    {
+      "subject_id": 1,
+      "subject_name": "Software Engineering",
+      "user_id": 1
+    },
+    {
+      "subject_id": 1,
+      "subject_name": "TAFL",
+      "user_id": 1
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": 1,
+      "title": "COMPLETE 2 UNITS",
+      "deadline": "2026-04-21",
+      "priority": 1,
+      "estimated_time": 3,
+      "subject_id": 1,
+      "user_id": 1,
+      "status": "pending",
+      "created_at": "2026-04-19T20:48:22.018Z"
+    },
+    {
+      "task_id": 1,
+      "title": "COMPLETE TILL TURING MACHINE",
+      "deadline": "2026-04-21",
+      "priority": 2,
+      "estimated_time": 5,
+      "subject_id": 1,
+      "user_id": 1,
+      "status": "pending",
+      "created_at": "2026-04-19T20:48:47.466Z"
+    }
+  ],
+  "schedules": [
+    {
+      "schedule_id": 1,
+      "date": "2026-04-20",
+      "task_id": 1,
+      "time_slot": "08:00 - 09:00",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 2,
+      "date": "2026-04-20",
+      "task_id": 1,
+      "time_slot": "09:30 - 10:30",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 3,
+      "date": "2026-04-20",
+      "task_id": 1,
+      "time_slot": "11:00 - 12:00",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 4,
+      "date": "2026-04-20",
+      "task_id": 1,
+      "time_slot": "14:00 - 15:00",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 5,
+      "date": "2026-04-21",
+      "task_id": 1,
+      "time_slot": "08:00 - 09:00",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 6,
+      "date": "2026-04-21",
+      "task_id": 1,
+      "time_slot": "09:30 - 10:30",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 7,
+      "date": "2026-04-21",
+      "task_id": 1,
+      "time_slot": "11:00 - 12:00",
+      "user_id": 1
+    },
+    {
+      "schedule_id": 8,
+      "date": "2026-04-21",
+      "task_id": 1,
+      "time_slot": "14:00 - 15:00",
+      "user_id": 1
+    }
+  ],
+  "_counters": {
+    "users": 0,
+    "subjects": 0,
+    "tasks": 0,
+    "schedules": 0
+  }
+}
